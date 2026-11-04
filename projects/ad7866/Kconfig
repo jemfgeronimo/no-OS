@@ -1,0 +1,16 @@
+menu "ad7866 Configuration"
+
+choice AD7866_EXAMPLE
+	prompt "Example variant"
+	default AD7866_BASIC_EXAMPLE
+
+config AD7866_BASIC_EXAMPLE
+	bool "Basic example"
+
+config AD7866_IIO_EXAMPLE
+	bool "IIO example"
+	depends on IIO
+
+endchoice
+
+endmenu
