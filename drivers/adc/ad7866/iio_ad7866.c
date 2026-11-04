@@ -189,6 +189,11 @@ static int ad7866_iio_read_scan(struct ad7866_iio_desc *iio_desc,
 	if (iio_desc->active_channels & AD7866_PAIR_2_MASK)
 		pairs[nb_pairs++] = AD7866_PAIR_2;
 
+	/* A single channel read in between can leave another pair selected. */
+	ret = ad7866_set_pair(iio_desc->ad7866_desc, pairs[0]);
+	if (ret)
+		return ret;
+
 	for (i = 0; i < nb_pairs; i++) {
 		ret = ad7866_convert(iio_desc->ad7866_desc,
 				     pairs[(i + 1) % nb_pairs], &val_a, &val_b);
