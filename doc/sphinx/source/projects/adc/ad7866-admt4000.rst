@@ -1,0 +1,1 @@
+.. include:: ../../../../../projects/ad7866-admt4000/README.rst

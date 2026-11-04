@@ -1,0 +1,193 @@
+/***************************************************************************//**
+ *   @file   iio_trigger_example.c
+ *   @brief  IIO example exposing the AD7866, ADMT4000 and TMC5240.
+ *   @author John Erasmus Mari Geronimo (johnerasmusmari.geronimo@analog.com)
+ *   Based on the admt4000 project example by Kister Genesis Jimenez.
+********************************************************************************
+ * Copyright 2026(c) Analog Devices, Inc.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+*******************************************************************************/
+#include "parameters.h"
+#include "common.h"
+#include "common_data.h"
+#include "ad7866_data.h"
+#include "iio_admt4000.h"
+#include "iio_admt_evb.h"
+#include "iio_tmc5240.h"
+#include "iio_trigger.h"
+#include "iio_app.h"
+
+#define DATA_BUFFER_SIZE 400
+uint8_t iio_data_buffer[DATA_BUFFER_SIZE * 5 * sizeof(uint32_t)];
+#define AD7866_BUFFER_BYTES	(DATA_BUFFER_SIZE * AD7866_NUM_CHANNELS * \
+				 sizeof(uint16_t))
+uint8_t ad7866_data_buffer[AD7866_BUFFER_BYTES];
+
+#define ADMT4000_GPIO_TRIG_NAME "admt4000-dev0"
+
+/* GPIO trigger */
+struct no_os_irq_init_param admt4000_gpio_irq_ip = {
+	.irq_ctrl_id = GPIO_IRQ_ID,
+	.platform_ops = GPIO_IRQ_OPS,
+	.extra = GPIO_IRQ_EXTRA,
+};
+
+struct iio_hw_trig_init_param admt4000_gpio_trig_ip = {
+	.irq_id = ADMT4000_GPIO_TRIG_IRQ_ID,
+	.irq_trig_lvl = NO_OS_IRQ_EDGE_FALLING,
+	.cb_info = {
+		.event = NO_OS_EVT_GPIO,
+		.peripheral = NO_OS_GPIO_IRQ,
+		.handle = ADMT4000_GPIO_CB_HANDLE,
+	},
+	.name = ADMT4000_GPIO_TRIG_NAME,
+};
+
+int example_main()
+{
+	int ret;
+	struct admt4000_iio_dev *admt4000_iio_desc;
+	struct admt_evb_iio_desc *admt_evb_desc;
+	struct ad7866_iio_desc *ad7866_iio_desc;
+	struct tmc5240_iio_dev *tmc_iio_desc;
+	struct iio_app_desc *app;
+	struct iio_app_init_param app_init_param = { 0 };
+	struct iio_ctx_attr *iio_ctx_attrs;
+	struct iio_hw_trig *admt4000_trig_desc;
+	struct no_os_eeprom_desc *eeprom_desc;
+	struct no_os_irq_ctrl_desc *admt4000_irq_desc;
+	struct iio_data_buffer data_buff = {
+		.buff = (void *)iio_data_buffer,
+		.size = DATA_BUFFER_SIZE * 5 * sizeof(uint16_t)
+	};
+	struct iio_data_buffer ad7866_buff = {
+		.buff = (void *)ad7866_data_buffer,
+		.size = AD7866_BUFFER_BYTES
+	};
+	struct admt_evb_iio_init_param admt_evb_ip = {
+		.gpio_v_en_ip = gpio_v_en_ip,
+		.gpio_shdn_n_ip = gpio_shdn_n_ip,
+		.gpio_coil_rs_ip = gpio_coil_rs_ip,
+	};
+	struct admt4000_iio_dev_init_param admt4000_iio_ip = {
+		.admt4000_init_param = &admt4000_ip,
+	};
+	struct tmc5240_iio_dev_init_param tmc_iio_ip = {
+		.tmc5240_init_param = &tmc5240_ip,
+	};
+	struct ad7866_iio_init_param ad7866_iio_ip = {
+		.ad7866_init = &ad7866_ip,
+	};
+	uint32_t nb_ctx_attr;
+	bool hw_mezzanine_is_valid = false;
+
+	admt4000_ip.gpio_acalc_ip = gpio_acalc_ip;
+	admt4000_ip.gpio_fault_ip = gpio_fault_ip;
+	spi_ad7866_extra_ip.get_input_clock = HAL_RCC_GetPCLK1Freq;
+
+	no_os_mdelay(2000);
+
+	ret = no_os_eeprom_init(&eeprom_desc, &eeprom_ip);
+	if (ret)
+		return ret;
+
+	no_os_mdelay(2000);
+	ret = get_iio_context_attributes_ex(&iio_ctx_attrs,
+					    &nb_ctx_attr,
+					    eeprom_desc,
+					    NULL,
+					    HW_CARRIER_NAME,
+					    &hw_mezzanine_is_valid,
+					    FIRMWARE_VERSION);
+
+	if (ret)
+		return ret;
+
+	no_os_mdelay(3);
+
+	ret = admt_evb_iio_init(&admt_evb_desc, &admt_evb_ip);
+	if (ret)
+		return ret;
+
+	ret = admt4000_iio_init(&admt4000_iio_desc, &admt4000_iio_ip);
+	if (ret)
+		return ret;
+
+	ret = tmc5240_iio_init(&tmc_iio_desc, &tmc_iio_ip);
+	if (ret)
+		return ret;
+
+	ret = ad7866_iio_init(&ad7866_iio_desc, &ad7866_iio_ip);
+	if (ret)
+		return ret;
+
+	/* Initialize interrupt controller */
+	ret = no_os_irq_ctrl_init(&admt4000_irq_desc, &admt4000_gpio_irq_ip);
+
+	if (ret)
+		return ret;
+
+	ret = no_os_irq_set_priority(admt4000_irq_desc,
+				     admt4000_gpio_trig_ip.irq_id, 7);
+	if (ret)
+		return ret;
+
+	admt4000_gpio_trig_ip.irq_ctrl = admt4000_irq_desc;
+
+	/* Initialize hardware trigger */
+	ret = iio_hw_trig_init(&admt4000_trig_desc, &admt4000_gpio_trig_ip);
+	if (ret)
+		return ret;
+
+	/* Declaring iio_devices structure */
+	struct iio_app_device iio_devices[] = {
+		{
+			.name = "admt_evb",
+			.dev = admt_evb_desc,
+			.dev_descriptor = admt_evb_desc->iio_dev,
+		},
+		{
+			.name = "admt4000",
+			.dev = admt4000_iio_desc,
+			.dev_descriptor = admt4000_iio_desc->iio_dev,
+			.read_buff = &data_buff,
+			.default_trigger_id = "trigger0",
+		},
+		{
+			.name = "tmc5240",
+			.dev = tmc_iio_desc,
+			.dev_descriptor = tmc_iio_desc->iio_dev,
+		},
+		{
+			.name = "ad7866",
+			.dev = ad7866_iio_desc,
+			.dev_descriptor = ad7866_iio_desc->iio_dev,
+			.read_buff = &ad7866_buff,
+		},
+	};
+
+	struct iio_trigger_init trigs[] = {
+		IIO_APP_TRIGGER(ADMT4000_GPIO_TRIG_NAME, admt4000_trig_desc,
+				&admt4000_iio_trig_desc)
+	};
+
+	app_init_param.devices = iio_devices;
+	app_init_param.nb_devices = NO_OS_ARRAY_SIZE(iio_devices);
+	app_init_param.uart_init_params = admt4000_uart_ip;
+
+	app_init_param.trigs = trigs;
+	app_init_param.nb_trigs = NO_OS_ARRAY_SIZE(trigs);
+	app_init_param.irq_desc = admt4000_irq_desc;
+	app_init_param.ctx_attrs = iio_ctx_attrs;
+	app_init_param.nb_ctx_attr = nb_ctx_attr;
+
+	ret = iio_app_init(&app, app_init_param);
+
+	if (ret)
+		return ret;
+
+	admt4000_trig_desc->iio_desc = app->iio_desc;
+
+	return iio_app_run(app);
+}
