@@ -129,6 +129,11 @@ no_os_sources_ifdef(CONFIG_ADC_AD7799 ${CMAKE_CURRENT_SOURCE_DIR}/ad7799/ad7799.
 no_os_sources_ifdef(CONFIG_ADC_IIO_AD7799 ${CMAKE_CURRENT_SOURCE_DIR}/ad7799/iio_ad7799.c)
 target_include_directories(no-os PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/ad7799)
 
+# AD7866
+no_os_sources_ifdef(CONFIG_ADC_AD7866 ${CMAKE_CURRENT_SOURCE_DIR}/ad7866/ad7866.c)
+no_os_sources_ifdef(CONFIG_ADC_IIO_AD7866 ${CMAKE_CURRENT_SOURCE_DIR}/ad7866/iio_ad7866.c)
+target_include_directories(no-os PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/ad7866)
+
 # AD796X
 no_os_sources_ifdef(CONFIG_ADC_AD796X ${CMAKE_CURRENT_SOURCE_DIR}/ad796x/ad796x.c)
 target_include_directories(no-os PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/ad796x)
