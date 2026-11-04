@@ -17,6 +17,16 @@ if(CONFIG_AD7866_BASIC_EXAMPLE)
     )
 endif()
 
+# IIO example
+if(CONFIG_AD7866_IIO_EXAMPLE)
+    target_sources(ad7866 PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/examples/iio_example/iio_example.c
+    )
+    target_include_directories(ad7866 PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/examples/iio_example
+    )
+endif()
+
 target_include_directories(ad7866 PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/common
     ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/${PLATFORM}
