@@ -29,8 +29,9 @@ Power Supply Requirements
 
 AVDD and DVDD are 2.7 V to 5.25 V and must be within 0.3 V of each other.
 VDRIVE (2.7 V to 5.25 V) sets the voltage of the serial interface and must
-match the logic level of the host. The 0 V to 2 x VREF input range requires a
-supply that is at least 2 x VREF, which is 5 V with the 2.5 V reference.
+match the logic level of the host. The input signal must stay within the
+supply: with the 0 V to 2 x VREF input range (5 V with the 2.5 V reference) a
+supply below 2 x VREF limits the usable input range to the supply voltage.
 
 The ``vdd_mv`` and ``vref_mv`` fields of ``ad7866_ip`` in
 `src/common/common_data.c <https://github.com/analogdevicesinc/no-OS/tree/main/projects/ad7866/src/common/common_data.c>`__

@@ -187,11 +187,6 @@ int ad7866_set_range(struct ad7866_desc *desc, enum ad7866_range range)
 	if (range == desc->range && range == desc->range_sel)
 		return 0;
 
-	/* The selected input range must not exceed VDD. */
-	if (range == AD7866_RANGE_VREF_PM_VREF &&
-	    2 * desc->vref_mv > desc->vdd_mv)
-		return -EINVAL;
-
 	ret = ad7866_set_pins(desc, desc->pair_sel, range);
 	if (ret)
 		return ret;
@@ -325,10 +320,6 @@ int ad7866_init(struct ad7866_desc **desc,
 
 	if (init_param->pair > AD7866_PAIR_2 ||
 	    init_param->range > AD7866_RANGE_VREF_PM_VREF)
-		return -EINVAL;
-
-	if (init_param->range == AD7866_RANGE_VREF_PM_VREF &&
-	    2 * init_param->vref_mv > init_param->vdd_mv)
 		return -EINVAL;
 
 	descriptor = (struct ad7866_desc *)no_os_calloc(1, sizeof(*descriptor));

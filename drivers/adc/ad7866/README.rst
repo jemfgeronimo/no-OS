@@ -66,8 +66,16 @@ Reference and supply
 
 ``vref_mv`` is the voltage on VREF/DCAPA/DCAPB, 2500 for the internal
 reference (``AD7866_VREF_INTERNAL_MV``), and ``vdd_mv`` is the AVDD supply.
-They are used to validate the configuration, as the selected input range must
-not exceed VDD, and to convert the results to millivolts.
+Both are validated against the datasheet limits, and ``vref_mv`` is used to
+convert the results to millivolts.
+
+The input signal must stay between AGND - 0.3 V and AVDD + 0.3 V, whatever the
+selected range. The datasheet notes that the selected input range must not
+exceed VDD, so with the VREF +/- VREF range (0 V to 2 x VREF, 5 V with the
+2.5 V reference) on a lower supply, such as 3.3 V, only the lower part of the
+range can be used and the codes above the supply voltage are never reached.
+The driver accepts this configuration and the conversion of codes to
+millivolts does not depend on the supply.
 
 Channel pair and range selection
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -80,7 +80,11 @@ struct ad7866_init_param {
 	struct no_os_gpio_init_param *gpio_range_init;
 	/** Reference voltage in mV (2500 when using the internal reference) */
 	uint32_t vref_mv;
-	/** AVDD supply voltage in mV */
+	/**
+	 * AVDD supply voltage in mV. The input signal must stay within the
+	 * supply (AVDD + 0.3 V at most), so with the VREF +/- VREF range and
+	 * a supply below 2 x VREF the top of the range cannot be reached.
+	 */
 	uint32_t vdd_mv;
 	/** Initial channel pair */
 	enum ad7866_pair pair;
