@@ -12,6 +12,7 @@
 #include "no_os_alloc.h"
 #include "no_os_delay.h"
 #include "no_os_error.h"
+#include "no_os_print_log.h"
 
 /* Both ADC results are read on one data line: 2 x 16 SCLK cycles. */
 #define AD7866_FRAME_BYTES		4
@@ -72,12 +73,19 @@ static int ad7866_decode(struct ad7866_desc *desc, const uint16_t *words,
 	uint8_t i;
 
 	for (i = 0; i < AD7866_NUM_ADC; i++) {
-		if (words[i] & AD7866_ZERO_MASK)
+		if (words[i] & AD7866_ZERO_MASK) {
+			pr_debug("AD7866: bad leading zero, word %u 0x%04x\n",
+				 i, (unsigned int)words[i]);
 			return -EIO;
+		}
 
 		adc = no_os_field_get(AD7866_STATUS_AB_MASK, words[i]);
-		if (found[adc])
+		if (found[adc]) {
+			pr_debug("AD7866: same ADC twice, 0x%04x 0x%04x\n",
+				 (unsigned int)words[0],
+				 (unsigned int)words[1]);
 			return -EIO;
+		}
 
 		found[adc] = true;
 		data = no_os_field_get(AD7866_DATA_MASK, words[i]);
@@ -87,11 +95,20 @@ static int ad7866_decode(struct ad7866_desc *desc, const uint16_t *words,
 			val[adc] = data;
 	}
 
-	if (no_os_field_get(AD7866_STATUS_A0_MASK, words[0]) != desc->pair)
+	if (no_os_field_get(AD7866_STATUS_A0_MASK, words[0]) != desc->pair) {
+		pr_debug("AD7866: A0 is not %u, words 0x%04x 0x%04x\n",
+			 (unsigned int)desc->pair, (unsigned int)words[0],
+			 (unsigned int)words[1]);
 		return -EIO;
+	}
 
-	if (no_os_field_get(AD7866_STATUS_RANGE_MASK, words[0]) != desc->range)
+	if (no_os_field_get(AD7866_STATUS_RANGE_MASK, words[0]) !=
+	    desc->range) {
+		pr_debug("AD7866: RANGE is not %u, words 0x%04x 0x%04x\n",
+			 (unsigned int)desc->range, (unsigned int)words[0],
+			 (unsigned int)words[1]);
 		return -EIO;
+	}
 
 	if (val_a)
 		*val_a = val[0];
