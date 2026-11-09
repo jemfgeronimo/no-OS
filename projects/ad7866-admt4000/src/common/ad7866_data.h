@@ -7,8 +7,8 @@
  *
  * SPDX-License-Identifier: BSD-3-Clause
 *******************************************************************************/
-#ifndef __AD7866_DATA_H__
-#define __AD7866_DATA_H__
+#ifndef AD7866_DATA_H_
+#define AD7866_DATA_H_
 
 #include "parameters.h"
 #include "ad7866.h"
@@ -40,4 +40,4 @@
 extern struct stm32_spi_init_param spi_ad7866_extra_ip;
 extern struct ad7866_init_param ad7866_ip;
 
-#endif /* __AD7866_DATA_H__ */
+#endif /* AD7866_DATA_H_ */

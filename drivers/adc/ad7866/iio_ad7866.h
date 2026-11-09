@@ -7,8 +7,8 @@
  *
  * SPDX-License-Identifier: BSD-3-Clause
 *******************************************************************************/
-#ifndef __IIO_AD7866_H__
-#define __IIO_AD7866_H__
+#ifndef IIO_AD7866_H_
+#define IIO_AD7866_H_
 
 #include "iio.h"
 #include "iio_types.h"
@@ -41,4 +41,4 @@ int ad7866_iio_init(struct ad7866_iio_desc **iio_desc,
 /* Remove the resources allocated by ad7866_iio_init(). */
 int ad7866_iio_remove(struct ad7866_iio_desc *iio_desc);
 
-#endif /* __IIO_AD7866_H__ */
+#endif /* IIO_AD7866_H_ */

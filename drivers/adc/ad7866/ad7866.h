@@ -7,8 +7,8 @@
  *
  * SPDX-License-Identifier: BSD-3-Clause
 *******************************************************************************/
-#ifndef __AD7866_H__
-#define __AD7866_H__
+#ifndef AD7866_H_
+#define AD7866_H_
 
 #include <stdint.h>
 #include "no_os_gpio.h"
@@ -132,4 +132,4 @@ int ad7866_init(struct ad7866_desc **desc,
 /* Remove the resources allocated by ad7866_init(). */
 int ad7866_remove(struct ad7866_desc *desc);
 
-#endif /* __AD7866_H__ */
+#endif /* AD7866_H_ */
